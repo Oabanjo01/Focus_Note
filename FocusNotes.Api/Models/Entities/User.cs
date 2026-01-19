@@ -1,6 +1,6 @@
 using System;
 
-namespace FocusNotes.Api.Model;
+namespace FocusNotes.Api.Models.Entities;
 
 public class User
 {
