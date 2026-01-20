@@ -1,0 +1,11 @@
+@FocusNotes_Api_HostAddress = http://localhost:5062
+
+###
+
+GET {{FocusNotes_Api_HostAddress}}/User/
+Accept: application/json
+
+###
+
+POST {{FocusNotes_Api_HostAddress}}/User/
+Content-Type: application/json

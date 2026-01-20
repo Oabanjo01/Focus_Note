@@ -1,6 +1,24 @@
-@FocusNotes.Api_HostAddress = http://localhost:5062
+@FocusNotes_Api_HostAddress = http://localhost:5062
 
-GET {{FocusNotes.Api_HostAddress}}/weatherforecast/
+###
+
+GET {{FocusNotes_Api_HostAddress}}/Notes/
 Accept: application/json
 
 ###
+
+POST {{FocusNotes_Api_HostAddress}}/Notes/
+Content-Type: application/json
+
+{
+    "name": "Sample Note",
+    "content": "This is a sample note content.",
+    "isCompleted": false,
+    "isTodo": true,
+    "createdAt": "2024-06-10T12:00:00Z"
+}
+
+###
+
+POST {{FocusNotes_Api_HostAddress}}/Notes/seed/
+Content-Type: application/json

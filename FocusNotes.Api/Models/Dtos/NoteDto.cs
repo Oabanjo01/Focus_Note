@@ -3,8 +3,7 @@ using FocusNotes.Api.Models.Entities;
 
 namespace FocusNotes.Api.Models.Dtos;
 
-public record class FetchNoteDto(
-    int Id,
+public record NoteDto(
     [Required][StringLength(50)] string Name,
     string Content,
     bool IsCompleted,
