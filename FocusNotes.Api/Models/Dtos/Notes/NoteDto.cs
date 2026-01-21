@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using FocusNotes.Api.Models.Entities;
 
-namespace FocusNotes.Api.Models.Dtos;
+namespace FocusNotes.Api.Models.Dtos.Notes;
 
 public record NoteDto(
     [Required][StringLength(50)] string Name,

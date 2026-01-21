@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Endpoints/" />
-    <Folder Include="Models/Dtos/" />
     <Folder Include="Models/Entities/" />
   </ItemGroup>
 

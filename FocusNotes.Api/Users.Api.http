@@ -2,7 +2,7 @@
 
 ###
 
-GET {{FocusNotes_Api_HostAddress}}/User/
+GET {{FocusNotes_Api_HostAddress}}/User/1
 Accept: application/json
 
 ###

@@ -1,5 +1,7 @@
 using System;
 using FocusNotes.Api.Data;
+using FocusNotes.Api.Models.Dtos.Notes;
+using FocusNotes.Api.Models.Dtos.Users;
 using FocusNotes.Api.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,45 +12,6 @@ public static class UserEndpoints
     private const string BaseEndpoint = "/User";
     private const string GetUserById = "GetUser";
 
-    private readonly static List<User> users =
-    [
-    new User
-    {
-        Id = 1,
-        Name = "Amina Bello",
-        Nickname = "Ami",
-        CreatedAt = DateTime.UtcNow.AddDays(-14)
-    },
-    new User
-    {
-        Id = 2,
-        Name = "David Okafor",
-        Nickname = "Dave",
-        CreatedAt = DateTime.UtcNow.AddDays(-10)
-    },
-    new User
-    {
-        Id = 3,
-        Name = "Lara Williams",
-        Nickname = null,
-        CreatedAt = DateTime.UtcNow.AddDays(-7)
-    },
-    new User
-    {
-        Id = 4,
-        Name = "Samuel Johnson",
-        Nickname = "SJ",
-        CreatedAt = DateTime.UtcNow.AddDays(-3)
-    },
-    new User
-    {
-        Id = 5,
-        Name = "Fatima Abdullahi",
-        Nickname = "Fati",
-        CreatedAt = DateTime.UtcNow
-    }
-];
-
     public static void MapUserEndpoints(this WebApplication webApplication)
     {
 
@@ -56,13 +19,41 @@ public static class UserEndpoints
 
         userGroup.MapGet("/{id}", async (NoteStoreContext noteStoreContext, int id) =>
         {
-            await noteStoreContext.Users.Include(user => user.Notes).FirstOrDefaultAsync(user => user.Id == id);
+            User? user = await noteStoreContext.Users.Include(user => user.Notes).FirstOrDefaultAsync(user => user.Id == id);
+
+            if (user is null) return Results.NotFound();
+
+            var noteDtos = user.Notes.Select(n => new FetchNoteDto(
+            n.Id,
+            n.Name,
+            n.Content ?? "",
+            n.IsCompleted,
+            n.IsTodo,
+            n.Category,
+            n.CreatedAt)).ToList();
+
+            var userDto = new UserDto(
+        user.Id,
+        user.Name,
+        user.Nickname,
+        noteDtos,
+        user.CreatedAt
+    );
+
+            return Results.Ok(userDto);
 
         }).WithName(GetUserById);
 
-        userGroup.MapPost("/", async (NoteStoreContext noteStoreContext) =>
+        userGroup.MapPost("/", async (NoteStoreContext noteStoreContext, CreateUserDto newUser) =>
         {
-            await noteStoreContext.Users.AddRangeAsync(users);
+            User note = new()
+            {
+                Name = newUser.Name,
+                CreatedAt = DateTime.UtcNow,
+                Nickname = newUser.Nickname,
+            };
+
+            noteStoreContext.Users.Add(note);
 
             await noteStoreContext.SaveChangesAsync();
 

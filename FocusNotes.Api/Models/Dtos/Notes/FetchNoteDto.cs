@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using FocusNotes.Api.Models.Entities;
 
-namespace FocusNotes.Api.Models.Dtos;
+namespace FocusNotes.Api.Models.Dtos.Notes;
 
-public record CreateNoteDto(
+public record class FetchNoteDto(
+    int Id,
     [Required][StringLength(50)] string Name,
     string Content,
     bool IsCompleted,

@@ -22,6 +22,7 @@ if (app.Environment.IsDevelopment())
 
 app.MigrateDB();
 app.MapNotesEndpoints();
+app.MapUserEndpoints();
 app.UseHttpsRedirection();
 
 app.Run();

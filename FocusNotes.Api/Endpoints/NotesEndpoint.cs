@@ -1,6 +1,7 @@
 using System;
 using FocusNotes.Api.Data;
 using FocusNotes.Api.Models.Dtos;
+using FocusNotes.Api.Models.Dtos.Notes;
 using FocusNotes.Api.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,17 +16,18 @@ public static class NotesEndpoint
     {
         RouteGroupBuilder notesgroup = webApplication.MapGroup(BaseEndpoint);
 
-        notesgroup.MapGet("/", async (NoteStoreContext noteStoreContext) =>
+        notesgroup.MapGet("/", async (NoteStoreContext noteStoreContext, int userId) =>
         {
-            List<FetchNoteDto> fetchedNotes = await noteStoreContext.Notes.Select(note => new FetchNoteDto(note.Id, note.Name, note.Content ?? "", note.IsCompleted, note.IsTodo, note.Category, note.CreatedAt)).AsNoTracking().ToListAsync();
+            List<FetchNoteDto> fetchedNotes = await noteStoreContext.Notes.Where(note => userId == note.UserId).Select(note => new FetchNoteDto(note.Id, note.Name, note.Content ?? "", note.IsCompleted, note.IsTodo, note.Category, note.CreatedAt)).AsNoTracking().ToListAsync();
 
             return
                 Results.Ok(fetchedNotes);
         });
 
-        notesgroup.MapGet("/{id}/", async (NoteStoreContext noteStoreContext, int id) =>
+        notesgroup.MapGet("/{id}/", async (NoteStoreContext noteStoreContext, int id, int userId) =>
         {
-            Notes? fetchedNotes = await noteStoreContext.Notes.FindAsync(id);
+            Notes? fetchedNotes = await noteStoreContext.Notes.Where(n => n.Id == id && n.UserId == userId)
+            .FirstOrDefaultAsync();
 
             if (fetchedNotes is null) return Results.NotFound();
 
@@ -43,10 +45,12 @@ public static class NotesEndpoint
                 Content = newNote.Content,
                 CreatedAt = DateTime.UtcNow,
                 IsCompleted = newNote.IsCompleted,
-                IsTodo = newNote.IsTodo
+                IsTodo = newNote.IsTodo,
+                Category = newNote.Category,
+                UserId = newNote.UserId
             };
 
-            await noteStoreContext.Notes.AddAsync(note);
+            noteStoreContext.Notes.Add(note);
             await noteStoreContext.SaveChangesAsync();
 
             FetchNoteDto fetchedNote = new(note.Id, note.Name, note.Content, note.IsCompleted, note.IsTodo, note.Category, note.CreatedAt);
@@ -68,25 +72,16 @@ public static class NotesEndpoint
 
             await noteStoreContext.SaveChangesAsync();
 
-            ModifyNoteDto modifyNoteDto = new()
-            {
-                Id = noteToUpdate.Id,
-                Name = note.Name ?? noteToUpdate.Name,
-                Content = note.Content ?? noteToUpdate.Content,
-                IsCompleted = note.IsCompleted ?? noteToUpdate.IsCompleted,
-                IsTodo = note.IsTodo ?? noteToUpdate.IsTodo
-            };
-
-
-            return Results.CreatedAtRoute(GetNotesById, new { id = Id, modifyNoteDto });
-        });
-
-        notesgroup.MapDelete("/{id}", async (int id, NoteStoreContext noteStoreContext) =>
-        {
-            await noteStoreContext.Notes.Where(note => id == note.Id).ExecuteDeleteAsync();
-            await noteStoreContext.SaveChangesAsync();
 
             return Results.NoContent();
         });
+
+        notesgroup.MapDelete("/{id}", async (int id, NoteStoreContext noteStoreContext, int userId) =>
+        {
+            int noteToDelete = await noteStoreContext.Notes.Where(note => id == note.Id && note.UserId == userId).ExecuteDeleteAsync();
+
+            return noteToDelete > 0 ? Results.NoContent() : Results.NotFound();
+        });
+
     }
 }
