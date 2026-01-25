@@ -17,13 +17,13 @@ public static class UserEndpoints
 
         RouteGroupBuilder userGroup = webApplication.MapGroup(BaseEndpoint);
 
-        userGroup.MapGet("/{id}", async (NoteStoreContext noteStoreContext, int id) =>
+        userGroup.MapGet("/{id:int}", async (NoteStoreContext noteStoreContext, int id) =>
         {
             User? user = await noteStoreContext.Users.Include(user => user.Notes).FirstOrDefaultAsync(user => user.Id == id);
 
             if (user is null) return Results.NotFound();
 
-            var noteDtos = user.Notes.Select(n => new FetchNoteDto(
+            List<FetchNoteDto> noteDtos = user.Notes.Select(n => new FetchNoteDto(
             n.Id,
             n.Name,
             n.Content ?? "",
@@ -32,17 +32,18 @@ public static class UserEndpoints
             n.Category,
             n.CreatedAt)).ToList();
 
-            var userDto = new UserDto(
-        user.Id,
-        user.Name,
-        user.Nickname,
-        noteDtos,
-        user.CreatedAt
-    );
+            UserDto userDto = new(
+                user.Id,
+                user.Name,
+                user.Nickname,
+                noteDtos,
+                user.CreatedAt
+            );
 
             return Results.Ok(userDto);
 
-        }).WithName(GetUserById);
+        }).WithName(GetUserById).Produces<List<UserDto>>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound);
 
         userGroup.MapPost("/", async (NoteStoreContext noteStoreContext, CreateUserDto newUser) =>
         {

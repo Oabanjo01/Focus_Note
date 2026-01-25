@@ -3,6 +3,7 @@ using FocusNotes.Api.Data;
 using FocusNotes.Api.Models.Dtos;
 using FocusNotes.Api.Models.Dtos.Notes;
 using FocusNotes.Api.Models.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace FocusNotes.Api.Endpoints;
@@ -16,15 +17,28 @@ public static class NotesEndpoint
     {
         RouteGroupBuilder notesgroup = webApplication.MapGroup(BaseEndpoint);
 
-        notesgroup.MapGet("/", async (NoteStoreContext noteStoreContext, int userId) =>
-        {
-            List<FetchNoteDto> fetchedNotes = await noteStoreContext.Notes.Where(note => userId == note.UserId).Select(note => new FetchNoteDto(note.Id, note.Name, note.Content ?? "", note.IsCompleted, note.IsTodo, note.Category, note.CreatedAt)).AsNoTracking().ToListAsync();
+        notesgroup.MapGet("/{userId:int}", async (
+      int userId,
+     NoteStoreContext noteStoreContext) =>
+ {
+     var fetchedNotes = await noteStoreContext.Notes
+         .Where(note => note.UserId == userId)
+         .Select(note => new FetchNoteDto(
+             note.Id,
+             note.Name,
+             note.Content ?? "",
+             note.IsCompleted,
+             note.IsTodo,
+             note.Category,
+             note.CreatedAt))
+         .AsNoTracking()
+         .ToListAsync();
 
-            return
-                Results.Ok(fetchedNotes);
-        });
+     return Results.Ok(fetchedNotes);
+ });
+        //  .Produces<List<FetchNoteDto>>(StatusCodes.Status200OK);
 
-        notesgroup.MapGet("/{id}/", async (NoteStoreContext noteStoreContext, int id, int userId) =>
+        notesgroup.MapGet("/{id:int}/{userId:int}", async (NoteStoreContext noteStoreContext, int id, int userId) =>
         {
             Notes? fetchedNotes = await noteStoreContext.Notes.Where(n => n.Id == id && n.UserId == userId)
             .FirstOrDefaultAsync();
@@ -35,7 +49,8 @@ public static class NotesEndpoint
 
             return
                 Results.Ok(noteById);
-        }).WithName(GetNotesById);
+        }).WithName(GetNotesById).Produces<List<FetchNoteDto>>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound);
 
         notesgroup.MapPost("/", async (NoteStoreContext noteStoreContext, CreateNoteDto newNote) =>
         {
