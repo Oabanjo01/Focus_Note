@@ -9,4 +9,9 @@
     <string name="nice_work">Nice work!</string>
     <string name="business_name">Jennifer Doe</string>
     <string name="business_title">Android Developer Extraordinaire</string>
+
+    <!-- Homepage -->
+    <string name="homepage_title">All Notes</string>
+    <string name="filter">Filter</string>
+    <string name="search_bar">Search</string>
 </resources>
